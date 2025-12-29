@@ -16,5 +16,6 @@ CREATE Table student(
     fullName varchar(100) NOT NULL,
     dateBirth date NOT NULL,
     classId char(5),
-    foreign key(classId) references class(classId)
+    
+    constraint fk_01 foreign key(classId) references class(classId)
 );

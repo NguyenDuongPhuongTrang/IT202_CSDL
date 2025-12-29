@@ -1,8 +1,8 @@
 -- Tạo CSDL
-CREATE database ss02XuatSac2;
+CREATE database ss02XuatSac;
 
 -- Chọn CSDL
-use ss02XuatSac2;
+use ss02XuatSac;
 
 -- Tạo bảng
 CREATE Table Class(

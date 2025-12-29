@@ -1,3 +1,5 @@
+use ss02;
+
 CREATE Table Score (
     studentId char(10),
     subjectId CHAR(10),
