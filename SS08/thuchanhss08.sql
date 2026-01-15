@@ -1,3 +1,4 @@
+      
 create database session8;
 use session8;
 
@@ -131,39 +132,103 @@ INSERT INTO orderItems (orderItemId, orderId, productId, quantity) VALUES
 (19, 11, 9, 2),
 (20, 12, 10, 1);
 
--- Lấy danh sách khách hàng, sản phẩm, đơn hàng
-select * from customers;
-select * from products;
-select * from orders;
+-- Lấy danh sách tất cả danh mục sản phẩm trong hệ thống.
+select * from categories;
 
--- Thống kê số lượng đơn hàng
-select c.customerId, c.customerName, count(o.orderId) from customers c
-join orders o on o.customerId = c.customerId
-group by c.customerId;
+-- Lấy danh sách đơn hàng có trạng thái là COMPLETED
+select * from orders
+where status = "completed";  
 
--- Thống kê số lượng sản phẩm bán ra
-select count(*) from orders
-where status = "completed";
+-- Lấy danh sách sản phẩm và sắp xếp theo giá giảm dần
+select * from products
+order by price desc;
 
--- Tìm sản phẩm có giá cao nhất, thấp nhất, trung bình
-select * from products p
-where p.price = (
-	select max(p.price) from products p
+-- Lấy 5 sản phẩm có giá cao nhất, bỏ qua 2 sản phẩm đầu tiên
+select * from products
+order by price desc
+limit 5 offset 2;
+
+-- Lấy danh sách sản phẩm kèm tên danh mục
+select p.productId, p.productName, p.price, c.categoryName from products p
+join categories c on c.categoryId = p.categoryId; 
+
+--
+select o.orderid, o.orderdate, c.customername, o.status from orders o
+join customers c on o.customerid = c.customerid;
+
+-- Lấy danh sách khách hàng có tổng số đơn hàng ≥ 2
+select 
+    c.customerid,
+    c.customername,
+    count(o.orderid) as total_orders
+from customers c
+join orders o on c.customerid = o.customerid
+group by c.customerid, c.customername
+having count(o.orderid) >= 2;
+
+-- Thống kê giá trung bình, thấp nhất và cao nhất của sản phẩm theo danh mục
+select 
+    c.categoryname,
+    avg(p.price) as avg_price,
+    min(p.price) as min_price,
+    max(p.price) as max_price
+from products p
+join categories c on p.categoryid = c.categoryid
+group by c.categoryname;
+
+-- Lấy danh sách sản phẩm có giá cao hơn giá trung bình của tất cả sản phẩm
+select 
+    productid,
+    productname,
+    price,
+    categoryid
+from products
+where count(price) > 0;
+
+-- Lấy danh sách khách hàng đã từng đặt ít nhất một đơn hàng 
+select 
+    c.customerid,
+    c.customername
+from customers c 
+where c.customerid in (
+    select o.customerid from orders o
 );
 
-select * from products p
-where p.price = (
-	select min(p.price) from products p
+-- Lấy đơn hàng có tổng số lượng sản phẩm lớn nhất.
+select 
+    o.orderid,
+    c.customername,
+    o.orderdate,
+    o.status,
+    sum(oi.quantity) as total_quantity
+from orders o
+join customers c on o.customerid = c.customerid
+join orderitems oi on o.orderid = oi.orderid
+group by o.orderid, c.customername, o.orderdate, o.status
+having sum(oi.quantity) = (
+    select max(total_qty)
+    from (
+        select sum(quantity) as total_qty
+        from orderitems
+        group by orderid
+    ) as sub
 );
 
--- Tìm khách hàng mua nhiều đơn hàng
-select c.*, count(o.orderId) from customers c
-join orders o on o.customerId = c.customerId
-group by c.customerId
-having count(o.orderId) = (
-	select max(totalOrder) from (
-		select count(o.orderId) as totalOrder from orders o
-        group by o.customerId
-    ) as temp
-);
-  
+-- Từ bảng tạm (subquery), thống kê tổng số lượng sản phẩm đã mua của từng khách hàng
+select 
+    sub.customerid,
+    sub.customername,
+    sum(sub.quantity) as total_quantity
+from (
+    select 
+        c.customerid,
+        c.customername,
+        oi.quantity
+    from customers c
+    join orders o on c.customerid = o.customerid
+    join orderitems oi on o.orderid = oi.orderid
+) as sub
+group by sub.customerid, sub.customername;
+ 
+
+    
